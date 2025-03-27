@@ -1,27 +1,24 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import networkx as nx
+import graphviz
 from collections import Counter
-
 
 class Node:
     def __init__(self, feature=None, threshold=None, left=None, right=None, value=None):
-        self.feature = feature  # The feature it was split on
-        self.threshold = threshold  # The threshold it was split on
-        self.left = left  # The left node it is pointed towards
-        self.right = right  # The right node it is pointed towards
-        self.value = value  # Is it a Leaf Node?
+        self.feature = feature
+        self.threshold = threshold
+        self.left = left
+        self.right = right
+        self.value = value
 
     def is_leaf_node(self):
-        return self.value is not None  # The value only changes if it is a Leaf Node
-
+        return self.value is not None
 
 class DecisionTree:
-    def __init__(self, min_samples_split, max_depth, n_features):
+    def __init__(self, min_samples_split=2, n_features=None):
         self.min_samples_split = min_samples_split
-        self.max_depth = max_depth  # Max depth of the tree (stopping criterium)
-        self.n_features = n_features  # Amount of features a tree will take into account
-        self.root = None  # Keep track of the root of the tree
+        self.max_depth = float('inf')  # Infinite depth
+        self.n_features = n_features
+        self.root = None
 
     def train(self, array, y):
         self.n_features = array.shape[1] if not self.n_features else min(array.shape[1], self.n_features)
@@ -32,16 +29,15 @@ class DecisionTree:
         n_labels = len(np.unique(y))
 
         if (depth >= self.max_depth) or (n_labels == 1) or (n_samples < self.min_samples_split):
-            print(y)
             leaf_value = self.most_common_label(y)
             return Node(value=leaf_value)
 
         feat_idxs = np.random.choice(n_features, self.n_features, replace=False)
-
         best_feature, best_threshold = self.best_split(array, y, feat_idxs)
+
         left_idxs, right_idxs = self.split(array[:, best_feature], best_threshold)
-        left = self.grow_tree(array[left_idxs, :], y[left_idxs], depth + 1)
-        right = self.grow_tree(array[right_idxs, :], y[right_idxs], depth + 1)
+        left = self.grow_tree(array[left_idxs, :], y[left_idxs], depth+1)
+        right = self.grow_tree(array[right_idxs, :], y[right_idxs], depth+1)
 
         return Node(best_feature, best_threshold, left, right)
 
@@ -68,6 +64,7 @@ class DecisionTree:
         left_idxs, right_idxs = self.split(array_column, threshold)
         if len(left_idxs) == 0 or len(right_idxs) == 0:
             return 0
+
         n = len(y)
         n_l, n_r = len(left_idxs), len(right_idxs)
         e_l, e_r = self.entropy(y[left_idxs]), self.entropy(y[right_idxs])
@@ -98,3 +95,37 @@ class DecisionTree:
         if x[node.feature] <= node.threshold:
             return self.traverse_tree(x, node.left)
         return self.traverse_tree(x, node.right)
+
+    def visualize_tree(self):
+        """ Generate a Graphviz representation of the decision tree. """
+        def add_nodes_edges(dot, node, parent_name=None, edge_label=""):
+            if node is None:
+                return
+
+            node_label = f"Feature {node.feature} ≤ {node.threshold:.2f}" if not node.is_leaf_node() else f"Class: {node.value}"
+            node_name = f"Node_{id(node)}"
+            dot.node(node_name, node_label, shape="ellipse" if not node.is_leaf_node() else "box")
+
+            if parent_name:
+                dot.edge(parent_name, node_name, label=edge_label)
+
+            add_nodes_edges(dot, node.left, node_name, "Yes")
+            add_nodes_edges(dot, node.right, node_name, "No")
+
+        dot = graphviz.Digraph(format="png")
+        add_nodes_edges(dot, self.root)
+        return dot
+
+if __name__ == "__main__":
+    # Generate sample dataset
+    np.random.seed(42)
+    X_sample = np.random.rand(50, 2) * 10
+    y_sample = np.random.randint(0, 3, 50)  # Multi-class classification
+
+    # Train the decision tree with infinite depth
+    tree = DecisionTree(min_samples_split=2, n_features=2)
+    tree.train(X_sample, y_sample)
+
+    # Generate and display the decision tree visualization
+    dot = tree.visualize_tree()
+    dot.render("decision_tree_unlimited", view=True)  # Saves & opens image in PyCharm
