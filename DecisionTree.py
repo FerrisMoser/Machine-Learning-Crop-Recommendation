@@ -115,17 +115,3 @@ class DecisionTree:
         dot = graphviz.Digraph(format="png")
         add_nodes_edges(dot, self.root)
         return dot
-
-if __name__ == "__main__":
-    # Generate sample dataset
-    np.random.seed(42)
-    X_sample = np.random.rand(50, 2) * 10
-    y_sample = np.random.randint(0, 3, 50)  # Multi-class classification
-
-    # Train the decision tree with infinite depth
-    tree = DecisionTree(min_samples_split=2, n_features=2)
-    tree.train(X_sample, y_sample)
-
-    # Generate and display the decision tree visualization
-    dot = tree.visualize_tree()
-    dot.render("decision_tree_unlimited", view=True)  # Saves & opens image in PyCharm
