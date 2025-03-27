@@ -110,11 +110,10 @@ plt.close()
 changed = np.sum(baseline_preds != tuned_preds)
 print(f"🔁 Predictions changed between Baseline and Tuned RFC: {changed} / {len(y_test)}")
 
-# 📊 Train vs Validation vs Test Accuracy
+# 📊 Validation vs Test Accuracy (more meaningful)
 acc_df = pd.DataFrame({
-    "Split": ["Train", "Validation", "Test"],
+    "Split": ["Validation", "Test"],
     "Accuracy": [
-        accuracy_score(y_train, baseline_model.predict(X_train)),
         accuracy_score(y_val, baseline_model.predict(X_val)),
         accuracy_score(y_test, baseline_model.predict(X_test)),
     ]
@@ -122,26 +121,26 @@ acc_df = pd.DataFrame({
 
 plt.figure(figsize=(8, 5))
 sns.barplot(data=acc_df, x="Split", y="Accuracy")
-plt.title("Train vs Validation vs Test Accuracy")
+plt.title("Validation vs Test Accuracy - Baseline RFC")
 plt.ylim(0.95, 1.01)
 plt.tight_layout()
-plt.savefig("accuracy_comparison.png")
+plt.savefig("val_test_accuracy_comparison.png")
 plt.close()
 
-# 📉 Learning Curve Plot
+# 📉 Learning Curve Plot (Validation vs Test Accuracy)
 train_sizes, train_scores, val_scores = learning_curve(baseline_model, X_trainval, y_trainval, cv=3, train_sizes=np.linspace(0.1, 1.0, 10))
-train_means = np.mean(train_scores, axis=1)
 val_means = np.mean(val_scores, axis=1)
+test_means = [accuracy_score(y_test, baseline_model.predict(X_test))] * len(train_sizes)
 
 plt.figure(figsize=(10, 6))
-plt.plot(train_sizes, train_means, label="Training Accuracy")
 plt.plot(train_sizes, val_means, label="Validation Accuracy")
+plt.plot(train_sizes, test_means, label="Test Accuracy")
 plt.xlabel("Training Set Size")
 plt.ylabel("Accuracy")
-plt.title("Learning Curve: Baseline RFC")
+plt.title("Learning Curve: Validation vs Test Accuracy")
 plt.legend()
 plt.tight_layout()
-plt.savefig("learning_curve.png")
+plt.savefig("learning_curve_val_test.png")
 plt.close()
 
 # 🧩 Confusion Matrix on Validation Set
