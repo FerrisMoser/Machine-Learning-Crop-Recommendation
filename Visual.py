@@ -52,7 +52,7 @@ plt.figure(figsize=(20, 10))
 plot_tree(dtc, feature_names=X.columns, class_names=le.classes_, filled=True, max_depth=3)
 plt.title("Decision Tree (Max Depth = 3)")
 plt.tight_layout()
-plt.savefig("decision_tree_visualization.png")
+plt.savefig("Final stuff/decision_tree_visualization.png")
 plt.close()
 
 # 🔥 Feature Importances from Baseline RFC
@@ -60,7 +60,7 @@ plt.figure(figsize=(10, 6))
 sns.barplot(x=baseline_model.feature_importances_, y=X.columns)
 plt.title("Feature Importances - Baseline RFC")
 plt.tight_layout()
-plt.savefig("feature_importance_plot.png")
+plt.savefig("Final stuff/feature_importance_plot.png")
 plt.close()
 
 # 🧠 RFE Feature Ranking
@@ -70,7 +70,7 @@ sns.barplot(x=X.columns, y=rfe_ranking)
 plt.title("RFE Feature Ranking (Lower = Better)")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("rfe_feature_ranking.png")
+plt.savefig("Final stuff/rfe_feature_ranking.png")
 plt.close()
 
 # 🌈 PCA Crop Distribution
@@ -81,7 +81,7 @@ plt.figure(figsize=(12, 8))
 sns.scatterplot(data=df, x="pca1", y="pca2", hue="label", palette="tab20", s=60, edgecolor="k")
 plt.title("PCA Crop Distribution")
 plt.tight_layout()
-plt.savefig("pca_crop_projection.png")
+plt.savefig("Final stuff/pca_crop_projection.png")
 plt.close()
 
 # ✅ Confusion Matrix from tuned RFC
@@ -93,7 +93,7 @@ plt.title("Final Test Confusion Matrix (Tuned RFC)")
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
 plt.tight_layout()
-plt.savefig("confusion_matrix_final_test.png")
+plt.savefig("Final stuff/confusion_matrix_final_test.png")
 plt.close()
 
 # ⚖️ Agreement Matrix: Baseline vs Tuned
@@ -104,7 +104,7 @@ plt.figure(figsize=(12, 8))
 sns.heatmap(agree, annot=True, fmt="d", cmap="Blues")
 plt.title("Agreement Matrix: Baseline vs Tuned RFC")
 plt.tight_layout()
-plt.savefig("rfc_agreement_matrix.png")
+plt.savefig("Final stuff/rfc_agreement_matrix.png")
 plt.close()
 
 changed = np.sum(baseline_preds != tuned_preds)
@@ -124,7 +124,7 @@ sns.barplot(data=acc_df, x="Split", y="Accuracy")
 plt.title("Validation vs Test Accuracy - Baseline RFC")
 plt.ylim(0.95, 1.01)
 plt.tight_layout()
-plt.savefig("val_test_accuracy_comparison.png")
+plt.savefig("Final stuff/val_test_accuracy_comparison.png")
 plt.close()
 
 # 📉 Learning Curve Plot (Validation vs Test Accuracy)
@@ -140,7 +140,7 @@ plt.ylabel("Accuracy")
 plt.title("Learning Curve: Validation vs Test Accuracy")
 plt.legend()
 plt.tight_layout()
-plt.savefig("learning_curve_val_test.png")
+plt.savefig("Final stuff/learning_curve_val_test.png")
 plt.close()
 
 # 🧩 Confusion Matrix on Validation Set
@@ -151,7 +151,7 @@ plt.title("Validation Set Confusion Matrix - Baseline RFC")
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
 plt.tight_layout()
-plt.savefig("val_confusion_matrix_baseline.png")
+plt.savefig("Final stuff/val_confusion_matrix_baseline.png")
 plt.close()
 
 # 📦 Feature Importance from Tuned Model
@@ -159,5 +159,65 @@ plt.figure(figsize=(10, 6))
 sns.barplot(x=rfc_tuned.best_estimator_.feature_importances_, y=X.columns)
 plt.title("Feature Importances - Tuned RFC")
 plt.tight_layout()
-plt.savefig("feature_importance_tuned.png")
+plt.savefig("Final stuff/feature_importance_tuned.png")
+plt.close()
+
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (needed for 3D plotting)
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+# Run 3D PCA
+pca_3d = PCA(n_components=3)
+pca_result_3d = pca_3d.fit_transform(X)
+df["pca1_3d"] = pca_result_3d[:, 0]
+df["pca2_3d"] = pca_result_3d[:, 1]
+df["pca3_3d"] = pca_result_3d[:, 2]
+
+# 3D Scatter plot grouped by crop label
+fig = plt.figure(figsize=(14, 10))
+ax = fig.add_subplot(111, projection="3d")
+
+# Generate consistent color mapping
+unique_labels = sorted(df["label"].unique())
+palette = sns.color_palette("tab20", len(unique_labels))
+label_to_color = {label: palette[i] for i, label in enumerate(unique_labels)}
+
+for label in unique_labels:
+    crop_df = df[df["label"] == label]
+    ax.scatter(
+        crop_df["pca1_3d"],
+        crop_df["pca2_3d"],
+        crop_df["pca3_3d"],
+        label=label,
+        color=label_to_color[label],
+        edgecolor='k',
+        s=50,
+        alpha=0.75
+    )
+
+ax.set_title("🌾 3D PCA Projection of Crops", fontsize=16)
+ax.set_xlabel("PCA 1")
+ax.set_ylabel("PCA 2")
+ax.set_zlabel("PCA 3")
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='small', title="Crop")
+plt.tight_layout()
+plt.savefig("Final stuff/pca_3d_crop_projection.png")
+plt.close()
+
+
+# Enhanced PCA scatter with color separation and clearer grouping
+plt.figure(figsize=(14, 10))
+sns.scatterplot(
+    data=df,
+    x="pca1", y="pca2",
+    hue="label",
+    palette="tab20",
+    style="label",
+    s=70, edgecolor="black", alpha=0.8
+)
+plt.title("PCA Projection of Crops (Colored and Styled by Label)", fontsize=16)
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+plt.tight_layout()
+plt.savefig("Final stuff/enhanced_pca_crop_projection.png")
 plt.close()
